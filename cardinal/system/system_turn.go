@@ -1,4 +1,3 @@
-// system_turn.go
 package system
 
 import (
@@ -14,18 +13,47 @@ import (
 
 // TurnSystem manages the progression of turns and rounds.
 func TurnSystem(world cardinal.WorldContext) error {
-	// Initialize the first turn if necessary
+	// Validate that player entities with their components exist.
+	if !validatePlayerEntities(world) {
+		return fmt.Errorf("player entities with components have not been initialized")
+	}
+
+	// Initialize the first turn if necessary.
 	if err := initializeFirstTurn(world); err != nil {
 		return err
 	}
 
-	// Process the active player's turn
+	// Process the active player's turn.
 	if err := processActivePlayerTurn(world); err != nil {
 		return err
 	}
 
-	// Handle end turn messages
+	// Handle end turn messages.
 	return handleEndTurnMessages(world)
+}
+
+// validatePlayerEntities checks if player entities with their components exist and prints their IDs.
+func validatePlayerEntities(world cardinal.WorldContext) bool {
+	allPlayersValid := true
+
+	search := cardinal.NewSearch(world, filter.Exact(component.Player{}))
+	err := search.Each(func(id types.EntityID) bool {
+		playerComponent, err := cardinal.GetComponent[component.Player](world, id)
+		if err != nil {
+			fmt.Printf("Error fetching player component for EntityID %d: %v\n", id, err)
+			allPlayersValid = false
+			return false // Error occurred, stop iteration.
+		}
+		fmt.Printf("Validated Player ID: %d, Nickname: %s\n", playerComponent.PlayerID, playerComponent.Nickname)
+		return true // Component is valid, continue iteration.
+	})
+
+	if err != nil {
+		fmt.Println("An error occurred during player entity validation:", err)
+		allPlayersValid = false
+	}
+
+	return allPlayersValid
 }
 
 func initializeFirstTurn(world cardinal.WorldContext) error {

@@ -69,7 +69,18 @@ func HexMapSystem(world cardinal.WorldContext) error {
 
 			playerEntityID, err := cardinal.Create(world, playerComponent)
 			if err != nil {
+				fmt.Printf("Failed to create player entity for nickname %s: %v\n", playerNicknames[i], err)
 				return fmt.Errorf("failed to create player entity: %w", err)
+			} else {
+				fmt.Printf("Successfully created player entity for nickname %s with ID %d\n", playerNicknames[i], playerEntityID)
+			}
+
+			// Attempt to fetch the player component immediately after creation for validation
+			_, err = cardinal.GetComponent[comp.Player](world, playerEntityID)
+			if err != nil {
+				fmt.Printf("Failed to fetch player component for entity ID %d immediately after creation: %v\n", playerEntityID, err)
+			} else {
+				fmt.Println("Successfully fetched player component immediately after creation")
 			}
 
 			// Set the PlayerID in the Player component to the EntityID of the newly created player entity
